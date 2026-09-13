@@ -1,3 +1,24 @@
+<style>
+  .topic-badge {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0.35em 0.9em;
+    font-size: 1rem;
+    font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 999px;
+    text-decoration: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .topic-badge:hover,
+  .topic-badge:focus {
+    background-color: #c7254e;
+    color: #fff;
+    text-decoration: none;
+  }
+</style>
+
 <a href="#/home"><fa-icon [icon]="faCaretLeft"></fa-icon> &nbsp; back to Catalogue</a>
 
 <h2 class="mt-3">How to add your repository to the catalogue</h2>
@@ -23,8 +44,8 @@
       <div class="card-body">
         <h6 class="card-title">{{ tab.key }}</h6>
         <p class="card-text">
-          <strong>Required topic:</strong> 
-          <code class="bg-light p-1 rounded">{{ tab.value.topic }}</code>
+          <strong>Required topic:</strong><br>
+          <a class="topic-badge" href="https://github.com/topics/{{ tab.value.topic }}" target="_blank" rel="noopener">{{ tab.value.topic }}</a>
         </p>
         <small class="text-muted">Organization: {{ tab.value.org || 'default-org' }}</small>
       </div>
