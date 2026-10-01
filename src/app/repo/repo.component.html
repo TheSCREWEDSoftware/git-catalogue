@@ -1,18 +1,48 @@
-<div class="media">
-  <img
-    [src]="'https://raw.githubusercontent.com/' + fullName + '/master/icon.png'"
-    alt="{{ fullName }}"
-    class="mr-3 logo-small"
-    onerror="this.src = 'https://avatars0.githubusercontent.com/u/20147732?v=4';"
-  />
-  <div class="media-body">
+<div class="catalogue-card">
+  <div class="catalogue-card-header">
+    <img
+      [src]="'https://raw.githubusercontent.com/' + fullName + '/master/icon.png'"
+      alt="{{ fullName }}"
+      class="logo-small"
+      onerror="this.src = 'https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png';"
+    />
     <h4 class="mt-0 mb-0">
-      <a href="#/details/{{ id }}">{{ name }}</a>
+      <a href="#/details/{{ id }}/{{ name | slugify }}">{{ name }}</a>
     </h4>
-    <span class="text-muted text-tiny">
-      <fa-icon [icon]="faStar"></fa-icon> {{ stars }} | Created {{ created | amTimeAgo }}
-      <ng-container *ngIf="updated"> | Updated {{ updated | amTimeAgo }}</ng-container>
+  </div>
+
+  <div class="text-muted text-tiny" *ngIf="authorLogin">
+    By: <a [href]="authorUrl" target="_blank" rel="noopener">{{ authorLogin }}</a>
+  </div>
+
+  <div class="catalogue-stat-buttons">
+    <a class="catalogue-stat-btn" [href]="htmlUrl + '/watchers'" target="_blank" rel="noopener" title="Watch on GitHub">
+      <fa-icon [icon]="faEye"></fa-icon> Watch <span class="catalogue-stat-count">{{ watchers || 0 }}</span>
+    </a>
+    <a class="catalogue-stat-btn" [href]="htmlUrl + '/fork'" target="_blank" rel="noopener" title="Fork on GitHub">
+      <fa-icon [icon]="faCodeFork"></fa-icon> Fork <span class="catalogue-stat-count">{{ forks || 0 }}</span>
+    </a>
+    <a class="catalogue-stat-btn" [href]="htmlUrl + '/stargazers'" target="_blank" rel="noopener" title="Star on GitHub">
+      <fa-icon [icon]="faStar"></fa-icon> Star <span class="catalogue-stat-count">{{ stars || 0 }}</span>
+    </a>
+    <span class="catalogue-category-badge" *ngIf="category">{{ category }}</span>
+    <span
+      class="catalogue-category-badge catalogue-category-more"
+      *ngIf="extraCategories.length"
+      [class.is-pinned]="showExtraCategories"
+      tabindex="0"
+      (click)="toggleExtraCategories()"
+      (keydown.enter)="toggleExtraCategories()"
+    >+{{ extraCategories.length }}
+      <span class="catalogue-extra-categories-popover">Also in: {{ extraCategories.join(', ') }}</span>
     </span>
-    <p>{{ description }}</p>
+  </div>
+
+  <p class="mb-1">{{ description }}</p>
+
+  <div class="text-muted text-tiny catalogue-dates">
+    <span *ngIf="updated">Updated {{ updated | amTimeAgo }}</span>
+    <span *ngIf="added">Added {{ added | amTimeAgo }}</span>
+    <span>Created {{ created | amTimeAgo }}</span>
   </div>
 </div>

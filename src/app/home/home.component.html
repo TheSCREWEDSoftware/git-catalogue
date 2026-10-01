@@ -1,3 +1,94 @@
+<style>
+  .catalogue-col-1 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .catalogue-col-2 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+  .catalogue-col-3 {
+    flex: 0 0 33.3333%;
+    max-width: 33.3333%;
+  }
+  @media (max-width: 700px) {
+    .catalogue-col-2,
+    .catalogue-col-3 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+  }
+  .catalogue-row-even {
+    background-color: #ffffff;
+  }
+  .catalogue-row-odd {
+    background-color: #e4e8ec;
+  }
+  /* mat-paginator right-aligns its own controls internally (its container
+     is already display:flex; justify-content:flex-end), so this wrapper
+     doesn't need its own flex layout - adding one made mat-paginator a flex
+     item sized to its content instead of the full row width, which is why
+     the top paginator used to render as a narrow chip while the bottom one
+     (a plain block, no wrapper) spanned the full width. Left as a plain
+     block so both paginators match. */
+  .catalogue-top-paginator {
+  }
+  .catalogue-bottom-paginator-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .catalogue-controlled-by {
+    font-size: 0.85rem;
+    color: #6c757d;
+    white-space: nowrap;
+  }
+  .catalogue-bottom-paginator-row mat-paginator {
+    flex: 1;
+  }
+  .catalogue-item-padding {
+    padding: 0.5rem 0.75rem;
+    max-width: 100%;
+  }
+  .catalogue-items-row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  /* Give the tab bar a solid background band instead of blending into the page,
+     and swap Material's default purple accent for the site's red brand.
+     Tinted blue (same formula as the active tab's red tint below: a low-alpha
+     color over the page background) both to read as a clearly separate band
+     from the page - #f4f5f7 was too close to white to do that, which is what
+     made the active tab look like an isolated floating pill with "gaps" on
+     every side instead of one tab among several in a shared bar - and to
+     echo the link/badge blue used elsewhere on the light theme. */
+  ::ng-deep .mat-mdc-tab-header {
+    background-color: rgba(0, 123, 255, 0.08);
+    border-radius: 6px 6px 0 0;
+    padding: 0 0.5rem;
+  }
+  ::ng-deep .mat-mdc-tab-labels {
+    gap: 0.25rem;
+  }
+  ::ng-deep .mdc-tab {
+    border-radius: 6px 6px 0 0;
+  }
+  ::ng-deep .mdc-tab.mdc-tab--active {
+    background-color: rgba(217, 0, 0, 0.08);
+  }
+  ::ng-deep .mdc-tab-indicator__content--underline {
+    border-color: #d90000 !important;
+  }
+  ::ng-deep .mdc-tab__text-label {
+    color: #495057;
+  }
+  ::ng-deep .mdc-tab--active .mdc-tab__text-label {
+    color: #d90000 !important;
+  }
+</style>
+
 <div class="row">
   <div class="col-6">
     Search an item by name:
@@ -19,11 +110,28 @@
       />
     </div>
 
-    <label for="sort">Sort items by:</label>
+    <div class="row">
+      <div class="col-4">
+        <label for="sort">Sort items by:</label>
+        <select id="sort" class="form-control mb-3" [(ngModel)]="sort" (ngModelChange)="onSortChange($event)" aria-label="Sort">
+          <option *ngFor="let option of sortOptions" [value]="option.key">{{ option.label }}</option>
+        </select>
+      </div>
 
-    <select id="sort" class="form-control mb-3" [(ngModel)]="sort" (ngModelChange)="onSortChange($event)" aria-label="Sort">
-      <option *ngFor="let option of sortOptions" [value]="option.key">{{ option.label }}</option>
-    </select>
+      <div class="col-4">
+        <label for="columns">Columns:</label>
+        <select id="columns" class="form-control mb-3" [(ngModel)]="columns" (ngModelChange)="onColumnsChange($event)" aria-label="Columns">
+          <option *ngFor="let option of columnOptions" [value]="option.key">{{ option.label }}</option>
+        </select>
+      </div>
+
+      <div class="col-4">
+        <label for="pageSize">Entries per page:</label>
+        <select id="pageSize" class="form-control mb-3" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange($event)" aria-label="Entries per page">
+          <option *ngFor="let option of pageSizeOptions" [value]="option.key">{{ option.label }}</option>
+        </select>
+      </div>
+    </div>
   </div>
 
   <div class="col-6">
@@ -35,30 +143,69 @@
 
 <div class="row" *ngIf="catalogueService.tabIndex !== -1">
   <div class="col-12">
-    <mat-tab-group (focusChange)="resetPage()" [selectedIndex]="catalogueService.tabIndex" (selectedTabChange)="onTabChange($event)">
+    <div *ngIf="pageSize !== 'all' && (catalogueService.items$[activeTabKey] | async) as activeItems" class="catalogue-top-paginator">
+      <mat-paginator
+        [pageIndex]="page"
+        [length]="filteredLength(activeItems)"
+        [pageSize]="effectivePageSize"
+        (page)="onPageChange($event)"
+        [hidePageSize]="true"
+      >
+      </mat-paginator>
+    </div>
+
+    <mat-tab-group (focusChange)="resetPage()" [selectedIndex]="activeIndex" (selectedTabChange)="onTabChange($event)">
       <mat-tab *ngFor="let key of catalogueService.confTabsKeys" label="{{ key }}">
         <div *ngIf="catalogueService.items$[key] | async as items" class="mt-2">
-          <div *ngFor="let item of currentPageItems(items)">
-            <app-repo
-              [id]="item.id"
-              [name]="item.name"
-              [stars]="item.stargazers_count"
-              [created]="item.created_at"
-              [updated]="item.pushed_at"
-              [description]="item.description"
-              [fullName]="item.full_name"
+          <div class="row catalogue-items-row">
+            <div
+              class="mb-3 catalogue-item-padding"
+              [ngClass]="[columnClass, isEvenRow(i) ? 'catalogue-row-even' : 'catalogue-row-odd']"
+              *ngFor="let item of currentPageItems(items); let i = index"
             >
-            </app-repo>
+              <app-repo
+                [id]="item.id"
+                [name]="item.name"
+                [stars]="item.stargazers_count"
+                [watchers]="item.subscribers_count"
+                [forks]="item.forks_count"
+                [created]="item.created_at"
+                [updated]="item.pushed_at"
+                [added]="item.added_at"
+                [description]="item.description"
+                [fullName]="item.full_name"
+                [htmlUrl]="item.html_url"
+                [authorLogin]="item.owner?.login"
+                [authorUrl]="item.owner?.html_url"
+                [category]="!catalogueService.CONF.tabs[key].topic ? categoryBadgeLabel(item._category) : null"
+                [categories]="!catalogueService.CONF.tabs[key].topic ? item._categories : null"
+              >
+              </app-repo>
+            </div>
           </div>
 
-          <mat-paginator
-            [pageIndex]="page"
-            [length]="filteredLength(items)"
-            [pageSize]="catalogueService.CONF.pageSize"
-            (page)="onPageChange($event)"
-            [hidePageSize]="true"
-          >
-          </mat-paginator>
+          <div class="catalogue-bottom-paginator-row">
+            <!-- Makes it obvious to anyone poking at the page/repo later that this
+                 interactive listing isn't part of azerothcore.github.io itself - it's
+                 a separate Angular project (git-catalogue) embedded into the site.
+                 Shown on every tab regardless of page size, but only when actually
+                 embedded (isEmbedded) - pointless/confusing if you're already looking
+                 straight at the git-catalogue repo via a standalone `ng serve`. -->
+            <span class="catalogue-controlled-by" *ngIf="catalogueService.isEmbedded">
+              This section is powered by the
+              <a href="https://github.com/azerothcore/git-catalogue" target="_blank" rel="noopener">git-catalogue</a>
+              repository
+            </span>
+            <mat-paginator
+              *ngIf="pageSize !== 'all'"
+              [pageIndex]="page"
+              [length]="filteredLength(items)"
+              [pageSize]="effectivePageSize"
+              (page)="onPageChange($event)"
+              [hidePageSize]="true"
+            >
+            </mat-paginator>
+          </div>
         </div>
       </mat-tab>
     </mat-tab-group>

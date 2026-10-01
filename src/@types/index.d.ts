@@ -108,6 +108,13 @@ export type Repository = {
   source?: Repository;
   network_count?: number;
   subscribers_count?: number;
+  added_at?: Date | string;
+  /** When the catalogue last refreshed subscribers_count/owner for this repo (see fetch-catalogue.js). */
+  details_fetched_at?: Date | string;
+  /** Set client-side by CatalogueService: which non-aggregate tab this item came from. */
+  _category?: string;
+  /** Set client-side by CatalogueService: every non-aggregate tab this item matched (a repo can carry more than one AC topic). */
+  _categories?: string[];
 };
 
 export type License = {

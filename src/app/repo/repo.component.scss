@@ -1,4 +1,129 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.catalogue-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.catalogue-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
 .logo-small {
-  height: 80px;
-  width: 80px;
+  height: 48px;
+  width: 48px;
+  flex-shrink: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.catalogue-category-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  padding: 0.2em 0.7em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+  background-color: #3f6fb4;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.catalogue-category-more {
+  position: relative;
+  cursor: pointer;
+  color: #495057;
+  background-color: #ced4da;
+}
+
+.catalogue-category-more:hover,
+.catalogue-category-more:focus {
+  background-color: #adb5bd;
+  color: #212529;
+}
+
+// A small hover preview of the repo's other topics, shown on hover/focus like
+// a tooltip; clicking the badge pins it open (.is-pinned) so it stays visible
+// without hovering, e.g. on touch devices.
+.catalogue-extra-categories-popover {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  padding: 0.4em 0.7em;
+  font-size: 0.7rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  white-space: nowrap;
+  color: #212529;
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+}
+
+.catalogue-category-more:hover .catalogue-extra-categories-popover,
+.catalogue-category-more:focus .catalogue-extra-categories-popover,
+.catalogue-category-more.is-pinned .catalogue-extra-categories-popover {
+  display: block;
+}
+
+.catalogue-stat-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0;
+}
+
+.catalogue-stat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.15em 0.6em;
+  font-size: 0.8rem;
+  color: #495057;
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.catalogue-stat-btn:hover,
+.catalogue-stat-btn:focus {
+  background-color: #e9ecef;
+  color: #212529;
+  text-decoration: none;
+}
+
+.catalogue-stat-count {
+  font-weight: 600;
+}
+
+.catalogue-card p.mb-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catalogue-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
 }

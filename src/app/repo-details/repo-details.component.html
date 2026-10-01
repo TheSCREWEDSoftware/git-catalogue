@@ -1,12 +1,12 @@
-<a [href]="returnHash"><fa-icon [icon]="faCaretLeft"></fa-icon> &nbsp; back to Catalogue</a>
+<a [href]="returnHash" class="back-link"><fa-icon [icon]="faCaretLeft"></fa-icon> <span>back to Catalogue</span></a>
 
-<div *ngIf="data$ | async as data" class="mt-3">
+<div *ngIf="data$ | async as data" class="mt-3 mb-5">
   <div class="media">
     <img
       [src]="data.logo"
       alt="{{ data.repo.full_name }}"
       class="mr-3 logo-small logo"
-      (error)="data.logo = 'https://avatars0.githubusercontent.com/u/20147732?v=4'"
+      (error)="data.logo = 'https://raw.githubusercontent.com/azerothcore/azerothcore.github.io/master/images/logo-github.png'"
     />
     <div class="media-body">
       <h2 class="mt-0 mb-0">{{ data.repo.name }}</h2>
@@ -34,7 +34,8 @@
             <fa-icon [icon]="faGlobe"></fa-icon> Repo ID: <span class="float-right">{{ data.repo.id }}</span>
           </li>
           <li>
-            <fa-icon [icon]="faUserCircle"></fa-icon> Author: <span class="float-right">{{ data.repo.owner.login }}</span>
+            <fa-icon [icon]="faUserCircle"></fa-icon> Author:
+            <a class="float-right" target="_blank" rel="noopener" [href]="data.repo.owner.html_url">{{ data.repo.owner.login }}</a>
           </li>
           <li>
             <fa-icon [icon]="faGithub"></fa-icon> Repo:
@@ -55,10 +56,14 @@
             <fa-icon [icon]="faClock"></fa-icon> Created: <span class="float-right">{{ data.repo.created_at | amTimeAgo }}</span>
           </li>
           <li>
-            <fa-icon [icon]="faSync"></fa-icon> Last update: <span class="float-right">{{ data.repo.pushed_at | amTimeAgo }}</span>
+            <fa-icon [icon]="faSync"></fa-icon> Last update:
+            <a class="float-right" target="_blank" rel="noopener" [href]="data.latestCommitUrl">{{ data.repo.pushed_at | amTimeAgo }}</a>
           </li>
           <li *ngIf="data.repo?.license">
             <fa-icon [icon]="faBalanceScale"></fa-icon> License: <span class="float-right">{{ data.repo.license.spdx_id }}</span>
+          </li>
+          <li *ngIf="data.repo?.details_fetched_at">
+            <fa-icon [icon]="faDatabase"></fa-icon> Last Data Fetch: <span class="float-right">{{ data.repo.details_fetched_at | amTimeAgo }}</span>
           </li>
         </ul>
       </div>

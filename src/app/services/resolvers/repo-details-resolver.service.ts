@@ -9,6 +9,7 @@ export type RepoDetailsData = {
   repo: Repository;
   readme: string;
   logo: string;
+  latestCommitUrl: string;
 };
 
 @Injectable({
@@ -30,6 +31,7 @@ export class RepoDetailsResolverService  {
         repo: of(repo),
         readme: this.catalogueService.getRawReadmeDefault(repo),
         logo: of(`https://raw.githubusercontent.com/${repo.full_name}/master/icon.png`),
+        latestCommitUrl: this.catalogueService.getLatestCommitUrl(repo),
       })),
     );
   }

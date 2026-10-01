@@ -16,6 +16,7 @@ import { HowtoComponent } from './howto/howto.component';
 import { MarkdownModule } from 'ngx-markdown';
 import { CatalogueComponent } from './catalogue/catalogue.component';
 import { EmojiFixupPipe } from './pipes/emoji-fixup.pipe';
+import { SlugifyPipe } from './pipes/slugify.pipe';
 import { AppConfigService } from './services/config/app-config.service';
 import { APP_CONFIG } from './services/config/config.token';
 
@@ -28,7 +29,7 @@ export function provideConfig(configService: AppConfigService) {
   return configService.getConfig();
 }
 
-@NgModule({ declarations: [AppComponent, RepoComponent, RepoDetailsComponent, HomeComponent, HowtoComponent, CatalogueComponent, EmojiFixupPipe],
+@NgModule({ declarations: [AppComponent, RepoComponent, RepoDetailsComponent, HomeComponent, HowtoComponent, CatalogueComponent, EmojiFixupPipe, SlugifyPipe],
     bootstrap: [AppComponent], imports: [FormsModule,
         BrowserModule,
         AppRoutingModule,

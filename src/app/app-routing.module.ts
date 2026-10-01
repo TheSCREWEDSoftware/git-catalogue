@@ -15,6 +15,15 @@ const routes: Routes = [
     resolve: { data: RepoDetailsResolverService },
     runGuardsAndResolvers: 'paramsChange'
   },
+  {
+    // Same target as above; the trailing :name segment is a readable-URL
+    // convenience only (e.g. /details/646926161/mod-playerbots) and is never
+    // read by the resolver, which only cares about the numeric :id.
+    path: 'details/:id/:name',
+    component: RepoDetailsComponent,
+    resolve: { data: RepoDetailsResolverService },
+    runGuardsAndResolvers: 'paramsChange'
+  },
   { path: 'how-to', component: HowtoComponent },
 ];
 

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, of } from 'rxjs';
+import { combineLatest, Observable, of } from 'rxjs';
 import { catchError, map, reduce, tap } from 'rxjs/operators';
 import { RepositoriesPage, Repository } from 'src/@types';
 import { Config, Tab } from './catalogue.model';
@@ -22,10 +22,54 @@ export class CatalogueService {
     @Inject(APP_CONFIG) conf: Config
   ) {
     this.CONF = conf;
-    // Initialize items immediately; config is preloaded during APP_INITIALIZER
-    for (const k of Object.keys(this.CONF.tabs)) {
-      this.items$[k] = this.getLocalItems(this.CONF.tabs[k]);
+    // Initialize items immediately; config is preloaded during APP_INITIALIZER.
+    // A tab with no `topic` is an aggregate tab (e.g. "All"): it doesn't fetch its
+    // own data, it's built as the union of every other tab's items instead.
+    const tabKeys = Object.keys(this.CONF.tabs);
+    const normalKeys = tabKeys.filter((k) => !!this.CONF.tabs[k].topic);
+    const aggregateKeys = tabKeys.filter((k) => !this.CONF.tabs[k].topic);
+
+    for (const k of normalKeys) {
+      this.items$[k] = this.getLocalItems(this.CONF.tabs[k]).pipe(
+        map((items) => items.map((item) => ({ ...item, _category: k })))
+      );
     }
+
+    for (const k of aggregateKeys) {
+      this.items$[k] = this.getAggregateItems(normalKeys);
+    }
+  }
+
+  private getAggregateItems(sourceKeys: string[]): Observable<Repository[]> {
+    if (sourceKeys.length === 0) {
+      return of([]);
+    }
+    return combineLatest(sourceKeys.map((k) => this.items$[k])).pipe(
+      map((lists) => {
+        const seen = new Map<number, Repository>();
+        // A repo can carry more than one AC topic (e.g. both module and tools),
+        // so it can show up in more than one source list here. Keep the first
+        // list's copy for display, but remember every category it matched so
+        // the "All" tab can surface that instead of silently picking one.
+        const categoriesById = new Map<number, string[]>();
+        for (const list of lists) {
+          for (const item of list) {
+            const categories = categoriesById.get(item.id) || [];
+            if (item._category && categories.indexOf(item._category) === -1) {
+              categories.push(item._category);
+            }
+            categoriesById.set(item.id, categories);
+            if (!seen.has(item.id)) {
+              seen.set(item.id, item);
+            }
+          }
+        }
+        return Array.from(seen.values()).map((item) => ({
+          ...item,
+          _categories: categoriesById.get(item.id) || (item._category ? [item._category] : []),
+        }));
+      })
+    );
   }
 
   private getLocalItems(tab: Tab): Observable<Repository[]> {
@@ -190,8 +234,30 @@ export class CatalogueService {
     return tabName ? this.confTabPaths.indexOf(`/${tabName}`) : 0;
   }
 
+  // True when this app is running embedded inside the azerothcore.github.io
+  // Jekyll site (which wraps every page, catalogue.html included, in the
+  // #main-navbar navbar from _layouts/default.html) rather than standalone,
+  // e.g. via `ng serve` against git-catalogue directly, where no such
+  // element exists. Shared by every component that shows the "powered by
+  // git-catalogue" attribution, so it's only hidden when it'd actually be
+  // redundant (you're already looking straight at the git-catalogue repo).
+  get isEmbedded(): boolean {
+    return typeof document !== 'undefined' && !!document.getElementById('main-navbar');
+  }
+
   getRawReadmeDefault(repo: Repository): Observable<string> {
     return this.getRawReadme(repo.full_name, repo.default_branch);
+  }
+
+  /** URL of the most recent commit on the repo's default branch, for the "Last update" link. */
+  getLatestCommitUrl(repo: Repository): Observable<string> {
+    const fallback = `${repo.html_url}/commits/${repo.default_branch}`;
+    return this.http
+      .get<{ html_url?: string }>(`https://api.github.com/repos/${repo.full_name}/commits/${repo.default_branch}`)
+      .pipe(
+        map((commit) => commit.html_url || fallback),
+        catchError(() => of(fallback)),
+      );
   }
 
   getRawReadme(repo: string, defaultBranch: string): Observable<string> {
@@ -207,7 +273,25 @@ export class CatalogueService {
             })
             .pipe(catchError(() => of('No README found'))),
         ),
+        map((text) => this.rewriteRelativeAssetUrls(text, repo, defaultBranch)),
       );
+  }
+
+  // READMEs routinely reference images/assets with bare relative paths (e.g.
+  // <img src="banner.png">) that only resolve when GitHub itself renders the
+  // file. Rendered on our own page those 404, so rewrite anything that isn't
+  // already absolute (http(s)://, protocol-relative, or a data: URI) to point
+  // at the raw file on GitHub.
+  private rewriteRelativeAssetUrls(markdown: string, repoFullName: string, branch: string): string {
+    const baseUrl = `https://raw.githubusercontent.com/${repoFullName}/${branch}/`;
+    const isAbsolute = (url: string) => /^([a-z]+:)?\/\//i.test(url) || url.startsWith('data:');
+    const resolve = (url: string) => (isAbsolute(url) ? url : baseUrl + url.replace(/^\.?\//, ''));
+
+    return markdown
+      // Markdown image syntax: ![alt](path "optional title")
+      .replace(/!\[([^\]]*)\]\(([^)\s]+)([^)]*)\)/g, (_match, alt, url, rest) => `![${alt}](${resolve(url)}${rest})`)
+      // Raw HTML <img src="...">, since READMEs frequently embed HTML directly
+      .replace(/(<img\b[^>]*?\bsrc\s*=\s*)(["'])([^"']+)\2/gi, (_match, prefix, quote, url) => `${prefix}${quote}${resolve(url)}${quote}`);
   }
 
   // New methods for managing data source mode

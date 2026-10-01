@@ -6,6 +6,7 @@ import {
   faCaretLeft,
   faClock,
   faCodeBranch,
+  faDatabase,
   faExternalLinkAlt,
   faEye,
   faGlobe,
@@ -32,8 +33,28 @@ export class RepoDetailsComponent {
         if (data && data.repo) {
           window.parent.document.title = data.repo.name;
         }
+        this.scrollToTop();
       }),
     );
+  }
+
+  // The catalogue status boxes sit above <app-root> in the static Jekyll page,
+  // so client-side navigation into a repo's details can leave the viewport
+  // scrolled past them with the details view out of sight. Bring it back into
+  // view instead of leaving the scroll position wherever it was.
+  private scrollToTop(): void {
+    try {
+      const appRoot = window.parent.document.querySelector('app-root');
+      if (appRoot && appRoot.scrollIntoView) {
+        appRoot.scrollIntoView({ behavior: 'auto', block: 'start' });
+      } else {
+        window.parent.scrollTo(0, 0);
+      }
+    } catch (error) {
+      try {
+        window.scrollTo(0, 0);
+      } catch (_) {}
+    }
   }
 
   readonly faCaretLeft = faCaretLeft;
@@ -47,6 +68,7 @@ export class RepoDetailsComponent {
   readonly faClock = faClock;
   readonly faBalanceScale = faBalanceScale;
   readonly faSync = faSync;
+  readonly faDatabase = faDatabase;
   readonly returnHash = this.readReturnHash();
 
   data$: Observable<RepoDetailsData>;

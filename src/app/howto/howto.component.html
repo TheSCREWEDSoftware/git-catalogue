@@ -5,32 +5,46 @@
     padding: 0.35em 0.9em;
     font-size: 1rem;
     font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
-    color: #c7254e;
-    background-color: #f9f2f4;
+    /* Matches the site's own link blue (e.g. the "back to Catalogue" link)
+       instead of an unrelated pink, so topic pills read as part of the same
+       visual language as every other link on the page. */
+    color: #007bff;
+    background-color: #e7f3ff;
     border-radius: 999px;
     text-decoration: none;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
   .topic-badge:hover,
   .topic-badge:focus {
-    background-color: #c7254e;
+    background-color: #007bff;
     color: #fff;
     text-decoration: none;
   }
+  .howto-optional-topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .catalogue-controlled-by {
+    display: block;
+    margin-top: 2rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+  }
 </style>
 
-<a href="#/home"><fa-icon [icon]="faCaretLeft"></fa-icon> &nbsp; back to Catalogue</a>
+<a href="#/home" class="back-link"><fa-icon [icon]="faCaretLeft"></fa-icon> <span>back to Catalogue</span></a>
 
 <h2 class="mt-3">How to add your repository to the catalogue</h2>
 
-<div class="alert alert-success">
+<div class="alert alert-success mb-4">
   <h5><i class="fas fa-info-circle"></i> Quick Start</h5>
   <p>To add your repository to this catalogue, you need to <strong>add specific GitHub topics</strong> to your repository. These topics act as tags that help organize repositories into different categories.</p>
 </div>
 
-<h4><i class="fas fa-tags"></i> Step 1: Add GitHub Topics to Your Repository</h4>
+<h4 class="mt-4 mb-3"><i class="fas fa-tags"></i> Step 1: Add GitHub Topics to Your Repository</h4>
 
-<div class="alert alert-info">
+<div class="alert alert-info mb-4">
   <p><strong>What are GitHub topics?</strong> Topics are labels that help categorize your repository. You can add them in your repository settings on GitHub.</p>
   <p><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics" target="_blank" class="btn btn-sm btn-outline-primary">
     <i class="fas fa-external-link-alt"></i> Learn how to add topics to your repository
@@ -38,22 +52,34 @@
 </div>
 
 <h5>Available Categories & Required Topics:</h5>
-<div class="row">
-  <div class="col-md-6" *ngFor="let tab of catalogueService.CONF?.tabs | keyvalue">
-    <div class="card mb-3">
-      <div class="card-body">
-        <h6 class="card-title">{{ tab.key }}</h6>
-        <p class="card-text">
-          <strong>Required topic:</strong><br>
-          <a class="topic-badge" href="https://github.com/topics/{{ tab.value.topic }}" target="_blank" rel="noopener">{{ tab.value.topic }}</a>
-        </p>
-        <small class="text-muted">Organization: {{ tab.value.org || 'default-org' }}</small>
-      </div>
-    </div>
-  </div>
+<div class="table-responsive mb-4">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Required Topic</th>
+        <th>Organization</th>
+        <th>Optional Topic</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let tab of catalogueService.CONF?.tabs | keyvalue">
+      <tr *ngIf="tab.value.topic">
+        <td>{{ tab.key }}</td>
+        <td><a class="topic-badge" href="https://github.com/topics/{{ tab.value.topic }}" target="_blank" rel="noopener">{{ tab.value.topic }}</a></td>
+        <td class="text-muted">{{ tab.value.org || 'default-org' }}</td>
+        <td *ngIf="tab.key === firstRequiredTopicTabKey" [attr.rowspan]="requiredTopicTabKeys.length">
+          <div class="howto-optional-topics">
+            <a class="topic-badge" *ngFor="let t of optionalTopics" href="https://github.com/topics/{{ t }}" target="_blank" rel="noopener">{{ t }}</a>
+          </div>
+        </td>
+      </tr>
+      </ng-container>
+    </tbody>
+  </table>
 </div>
 
-<div class="alert alert-primary">
+<div class="alert alert-primary mb-4">
   <h5><i class="fas fa-globe"></i> Global Repository Discovery</h5>
   <p>This catalogue searches <strong>globally across all of GitHub</strong> for repositories with the required topics. This means:</p>
   <ul class="mb-0">
@@ -64,10 +90,10 @@
   </ul>
 </div>
 
-<h4><i class="fas fa-file-alt"></i> Step 2: Prepare Your Repository</h4>
+<h4 class="mt-4 mb-3"><i class="fas fa-file-alt"></i> Step 2: Prepare Your Repository</h4>
 
 <h5>Required Information (add to your README.md):</h5>
-<ul class="list-group mb-3">
+<ul class="list-group mb-4">
   <li class="list-group-item">
     <strong>Name:</strong> Clear name of your module/script/tool
     <small class="text-muted d-block">Example: "Player Statistics Module"</small>
@@ -90,9 +116,9 @@
   </li>
 </ul>
 
-<h4><i class="fas fa-star"></i> Step 3: Enhance Your Repository (Recommended)</h4>
+<h4 class="mt-4 mb-3"><i class="fas fa-star"></i> Step 3: Enhance Your Repository (Recommended)</h4>
 
-<div class="accordion" id="enhancementAccordion">
+<div class="accordion mb-4" id="enhancementAccordion">
   <div class="card">
     <div class="card-header" id="readmeHeading">
       <h2 class="mb-0">
@@ -161,15 +187,25 @@
   </div>
 </div>
 
-<h4><i class="fas fa-rocket"></i> Step 4: Submit Your Repository</h4>
+<h4 class="mt-4 mb-3"><i class="fas fa-rocket"></i> Step 4: Submit Your Repository</h4>
 
-<div class="alert alert-warning">
+<div class="alert alert-warning mb-4">
   <h5><i class="fas fa-clock"></i> Processing Time</h5>
   <p>After adding the required topics to your repository, it may take up to <strong>30 minutes</strong> for your repository to appear in the catalogue, as the data is updated periodically.</p>
 </div>
 
-  <h4><i class="fas fa-question-circle"></i> Need Help?</h4>
+<h4 class="mt-4 mb-3"><i class="fas fa-question-circle"></i> Need Help?</h4>
 <p>If you have any questions or need assistance, feel free to reach out:</p>
 <ul>
   <li><a href="https://discord.com/invite/NjCfDwrK?utm_source=Discord%20Widget&utm_medium=Connect" target="_blank">Discord Community</a></li>
 </ul>
+
+<!-- Makes it obvious to anyone poking at the page/repo later that this page
+     isn't part of azerothcore.github.io itself - it's a separate Angular
+     project (git-catalogue) embedded into the site. Hidden when running
+     git-catalogue standalone (e.g. `ng serve`), where it'd be redundant. -->
+<span class="catalogue-controlled-by" *ngIf="catalogueService.isEmbedded">
+  This section is powered by the
+  <a href="https://github.com/azerothcore/git-catalogue" target="_blank" rel="noopener">git-catalogue</a>
+  repository
+</span>
